@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patates Oyunu</title>
+    <style>
+        /* Genel Ayarlar */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('patatesler/arka_plan.gif');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            flex-direction: column;
+            text-shadow: 2px 2px 4px #000000;
+        }
+
+        /* Tüm Ekranlar */
+        #ana-menu-ekrani, #oyun-ekrani, #ayarlar-ekrani, #hakkinda-ekrani {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        /* Ana Menü */
+        #ana-menu-dis {
+            padding: 40px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        #oyun-baslik {
+            font-size: 5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            animation: slideInFromTop 1s ease-in-out;
+        }
+
+        #ana-menu-icerik {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-buton {
+            padding: 18px 40px;
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .menu-buton:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .menu-buton:active {
+            transform: scale(0.95);
+        }
+
+        /* Genel Buton Stili (oyun içi) */
+        .buton {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .buton:hover {
+            background-color: #45a049;
+        }
+
+        .buton:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        /* Diğer CSS Kodları */
+        #patates {
+            width: 300px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        #patates:active {
+            transform: scale(0.95);
+        }
+
+        .kostum-resmi {
+            width: 60px;
+            margin: 5px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            border-radius: 10px;
+            transition: border-color 0.3s, opacity 0.3s;
+        }
+
+        .kostum-resmi.secili {
+            border-color: #4CAF50;
+        }
+
+        #oyun-arayuzu {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 90%;
+            max-width: 1200px;
+            position: relative;
+        }
+
+        #oyun-merkezi {
+            flex-grow: 1;
+            text-align: center;
+            margin: 0 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #sayac {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        #autoclicker-container {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Yükseltme Menüsü */
+        #yukseltme-container {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #kostumler-menusu {
+            width: 250px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: absolute;
+            top: 20px;
+            left: 5px; /* Kostüm menüsünü biraz daha sola kaydırır */
+        }
+
+        #kostum-menusu-baslik {
+            cursor: pointer;
+            margin: 0;
+            padding-bottom: 5px;
+            user-select: none;
+        }
+
+        #kostumler-icerik {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #ayarlar-ekrani, #hakkinda-ekrani {
+            padding: 40px;
+            border-radius: 15px;
+        }
+
+        /* Müzik Butonu Konumu */
+        #muzik-kontrol-butonu {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        /* Animasyonlar */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInFromTop {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Mobil Optimizasyon */
+        @media (max-width: 768px) {
+            #oyun-arayuzu {
+                flex-direction: column; /* Menüleri alt alta sırala */
+                align-items: center;
+                width: 100%;
+            }
+
+            #oyun-merkezi,
+            #autoclicker-container,
+            #yukseltme-container,
+            #kostumler-menusu {
+                width: 90%;
+                margin-top: 20px;
+                position: static; /* Sabit konumlandırmayı kaldır */
+                left: auto;
+                top: auto;
+            }
+
+            #patates {
+                width: 200px; /* Patatesi küçült */
+            }
+
+            #sayac {
+                font-size: 2em; /* Sayacı küçült */
+            }
+
+            .buton {
+                width: 90%; /* Butonları tam genişlik yap */
+            }
+
+            #muzik-kontrol-butonu,
+            #geri-don-butonu {
+                position: static;
+                margin: 10px;
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="ana-menu-ekrani">
+    <div id="ana-menu-dis">
+        <h1 id="oyun-baslik">Patates Tıklayıcı</h1>
+        <div id="ana-menu-icerik">
+            <button class="menu-buton" id="oyna-butonu">Oyna</button>
+            <button class="menu-buton" id="ayarlar-butonu">Ayarlar</button>
+            <button class="menu-buton" id="hakkinda-butonu">Hakkında</button>
+        </div>
+    </div>
+</div>
+
+<div id="oyun-ekrani" style="display: none;">
+    <div id="oyun-arayuzu">
+        <div id="oyun-merkezi">
+            <h2 id="sayac">Tıklama: 0</h2>
+            <img id="patates" src="patatesler/normal_patates.png" alt="Patates">
+            <br><br>
+            <button class="buton" id="geri-don-butonu">Menüye Dön</button>
+        </div>
+        <div id="autoclicker-container">
+            <h3>Otomatik Tıklayıcılar</h3>
+            <button class="buton" id="otomatik-tiklayici-1-butonu">
+                Çırak Tıklayıcı (50 Tıklama, +2/s)
+            </button>
+            <button class="buton" id="otomatik-tiklayici-2-butonu" disabled>
+                Usta Tıklayıcı (250 Tıklama, +10/s)
+            </button>
+            <button class="buton" id="otomatik-tiklayici-3-butonu" disabled>
+                Çiftçi Tıklayıcı (500 Tıklama, +25/s)
+            </button>
+            <button class="buton" id="otomatik-tiklayici-4-butonu" disabled>
+                İşçi Patates (1500 Tıklama, +100/s)
+            </button>
+            <button class="buton" id="otomatik-tiklayici-5-butonu" disabled>
+                Fabrika (5000 Tıklama, +500/s)
+            </button>
+            <button class="buton" id="otomatik-tiklayici-6-butonu" disabled>
+                İmparatorluk (25000 Tıklama, +1000/s)
+            </button>
+        </div>
+        <div id="yukseltme-container">
+            <h3>Yükseltmeler</h3>
+            <button class="buton" id="cift-tiklama-butonu" disabled>
+                Çift Tıklama (10000 Tıklama)
+            </button>
+            <button class="buton" id="super-tiklama-butonu" disabled>
+                Süper Tıklama (5000 Tıklama)
+            </button>
+            <button class="buton" id="autoclicker-hizlandirma-butonu" disabled>
+                Otomatik Tıklama Hızlandırma (20000 Tıklama)
+            </button>
+        </div>
+        <div id="kostumler-menusu">
+            <h3 id="kostum-menusu-baslik">Kostümler ▼</h3>
+            <div id="kostumler-icerik" style="display: none;">
+                <img id="normal-kostum" src="patatesler/normal_patates.png" alt="Normal Patates" class="kostum-resmi secili">
+                <img id="zombi-kostum" src="patatesler/zombi_patates.png" alt="Zombi Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="valorant-kostum" src="patatesler/valorant.png" alt="Valorant Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="arap-patates-kostum" src="patatesler/arap_patates.png" alt="Arap Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="pepsi-patates-kostum" src="patatesler/pepsi_patates.png" alt="Pepsi Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="minecraft-kostum" src="patatesler/minecraft_patates.png" alt="Minecraft Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="kratos-kostum" src="patatesler/kratos_patates.png" alt="Kratos Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="spiderman-patates-kostum" src="patatesler/spiderman_patates.png" alt="Spiderman Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="sushi-kostum" src="patatesler/sushi_patates.png" alt="Sushi Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="darth-vader-kostum" src="patatesler/darth_vader_patates.png" alt="Darth Vader Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="padisah-kostum" src="patatesler/padisah_patates.png" alt="Padişah Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="el-primo-kostum" src="patatesler/el_primo_patates.png" alt="El Primo Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+                <img id="shrek-kostum" src="patatesler/shrek_patates.png" alt="Shrek Patates" class="kostum-resmi" style="opacity: 0.5; cursor: not-allowed;">
+            </div>
+        </div>
+        <img id="muzik-kontrol-butonu" src="patatesler/muzik_kapatma.png" alt="Müziği Kapat">
+    </div>
+</div>
+
+<div id="ayarlar-ekrani" style="display: none;">
+    <h2>Ayarlar</h2>
+    <button class="buton" id="ses-ac-kapa">Müziği Kapat</button>
+    <button class="buton" id="ayarlardan-geri-don">Menüye Dön</button>
+</div>
+
+<div id="hakkinda-ekrani" style="display: none;">
+    <h2>Hakkında</h2>
+    <p>Bu oyun, JavaScript ve HTML öğrenme projesi olarak yapılmıştır.</p>
+    <p>Yapan: Patates Oyuncusu</p>
+    <button class="buton" id="hakkindadan-geri-don">Menüye Dön</button>
+</div>
+
+<audio id="arka-plan-muziki" src="patatesler/patates.mp3" preload="auto" loop></audio>
+<audio id="patates-sarkisi-sesi" src="patatesler/patates_sarki.mp3" preload="auto"></audio>
+<audio id="wow-sesi" src="patatesler/wow.mp3" preload="auto"></audio>
+
+<script>
+    // HTML elementlerini değişkenlere atıyoruz.
+    const anaMenuEkrani = document.getElementById('ana-menu-ekrani');
+    const oyunEkrani = document.getElementById('oyun-ekrani');
+    const ayarlarEkrani = document.getElementById('ayarlar-ekrani');
+    const hakkindaEkrani = document.getElementById('hakkinda-ekrani');
+    const patatesImg = document.getElementById('patates');
+    const sayacH2 = document.getElementById('sayac');
+
+    // Kostüm menüsü elementlerini tanımlıyoruz.
+    const kostumlerMenusu = document.getElementById('kostumler-menusu');
+    const kostumMenusuBaslik = document.getElementById('kostum-menusu-baslik');
+    const kostumlerIcerik = document.getElementById('kostumler-icerik');
+
+    // Kostüm resimlerini tanımlıyoruz.
+    const kostumResimleri = {
+        normal: document.getElementById('normal-kostum'),
+        zombi: document.getElementById('zombi-kostum'),
+        valorant: document.getElementById('valorant-kostum'),
+        arap: document.getElementById('arap-patates-kostum'),
+        pepsi: document.getElementById('pepsi-patates-kostum'),
+        minecraft: document.getElementById('minecraft-kostum'),
+        kratos: document.getElementById('kratos-kostum'),
+        spiderman: document.getElementById('spiderman-patates-kostum'),
+        sushi: document.getElementById('sushi-kostum'),
+        darthVader: document.getElementById('darth-vader-kostum'),
+        padisah: document.getElementById('padisah-kostum'),
+        elPrimo: document.getElementById('el-primo-kostum'),
+        shrek: document.getElementById('shrek-kostum')
+    };
+
+    // Otomatik tıklayıcı butonlarını tanımlıyoruz.
+    const otomatikTiklayici1Butonu = document.getElementById('otomatik-tiklayici-1-butonu');
+    const otomatikTiklayici2Butonu = document.getElementById('otomatik-tiklayici-2-butonu');
+    const otomatikTiklayici3Butonu = document.getElementById('otomatik-tiklayici-3-butonu');
+    const otomatikTiklayici4Butonu = document.getElementById('otomatik-tiklayici-4-butonu');
+    const otomatikTiklayici5Butonu = document.getElementById('otomatik-tiklayici-5-butonu');
+    const otomatikTiklayici6Butonu = document.getElementById('otomatik-tiklayici-6-butonu');
+
+    // Yükseltme butonlarını tanımlıyoruz.
+    const ciftTiklamaButonu = document.getElementById('cift-tiklama-butonu');
+    const superTiklamaButonu = document.getElementById('super-tiklama-butonu');
+    const autoclickerHizlandirmaButonu = document.getElementById('autoclicker-hizlandirma-butonu');
+
+    // Ses elementlerini tanımlıyoruz.
+    const arkaPlanMuziki = document.getElementById('arka-plan-muziki');
+    const muzikKontrolButonu = document.getElementById('muzik-kontrol-butonu');
+    const patatesSarkiSesi = document.getElementById('patates-sarkisi-sesi');
+    const wowSesi = document.getElementById('wow-sesi');
+    const sesAcKapaButonu = document.getElementById('ses-ac-kapa');
+
+    // Oyunun başlangıç değerleri.
+    let tiklamaSayisi = 0;
+    let oncekiYuzluk = 0;
+    let acikKostumler = {
+        zombi: false, valorant: false, arap: false, pepsi: false, minecraft: false, kratos: false, spiderman: false, sushi: false, darthVader: false, padisah: false, elPrimo: false, shrek: false
+    };
+    let toplamTiklamaHizi = 0;
+    let otomatikTiklayiciInterval = null;
+    let muzikAcik = true;
+    let clickMultiplier = 1;
+    let additiveClickValue = 0;
+    let autoclickerMultiplier = 1;
+
+    // Otomatik tıklayıcı maliyetleri.
+    const otomatikTiklayiciMaliyetleri = {
+        1: 50, 2: 250, 3: 500, 4: 1500, 5: 5000, 6: 25000
+    };
+
+    // Kostüm kilidi açma tıklama eşikleri
+    const kostumEskikleri = {
+        zombi: 100, valorant: 250, arap: 500, minecraft: 750, kratos: 1500, spiderman: 2500, pepsi: 10000, sushi: 12000, darthVader: 15000, padisah: 30000, elPrimo: 35000, shrek: 50000
+    };
+
+    function ekraniGoster(ekran) {
+        anaMenuEkrani.style.display = 'none';
+        oyunEkrani.style.display = 'none';
+        ayarlarEkrani.style.display = 'none';
+        hakkindaEkrani.style.display = 'none';
+        ekran.style.display = 'flex';
+    }
+
+    function sayacGuncelle() {
+        sayacH2.textContent = `Tıklama: ${tiklamaSayisi}`;
+        if (Math.floor(tiklamaSayisi / 100) > Math.floor(oncekiYuzluk / 100)) {
+            patatesSarkiSesi.currentTime = 0;
+            patatesSarkiSesi.play();
+        }
+        oncekiYuzluk = tiklamaSayisi;
+
+        for (const kostum in kostumEskikleri) {
+            if (tiklamaSayisi >= kostumEskikleri[kostum] && !acikKostumler[kostum]) {
+                acikKostumler[kostum] = true;
+                kostumResimleri[kostum].style.opacity = 1;
+                kostumResimleri[kostum].style.cursor = 'pointer';
+                alert(`Tebrikler! ${kostum.charAt(0).toUpperCase() + kostum.slice(1)} Patates kostümü açıldı!`);
+                wowSesi.play();
+            }
+        }
+
+        // Butonların etkinliğini güncelle
+        otomatikTiklayici1Butonu.disabled = tiklamaSayisi < otomatikTiklayiciMaliyetleri[1];
+        otomatikTiklayici2Butonu.disabled = tiklamaSayisi < otomatikTiklayiciMaliyetleri[2];
+        otomatikTiklayici3Butonu.disabled = tiklamaSayisi < otomatikTiklayiciMaliyetleri[3];
+        otomatikTiklayici4Butonu.disabled = tiklamaSayisi < otomatikTiklayiciMaliyetleri[4];
+        otomatikTiklayici5Butonu.disabled = tiklamaSayisi < otomatikTiklayiciMaliyetleri[5];
+        otomatikTiklayici6Butonu.disabled = tiklamaSayisi < otomatikTiklayiciMaliyetleri[6];
+
+        // Yükseltme butonlarının etkinliğini güncelle
+        ciftTiklamaButonu.disabled = tiklamaSayisi < 10000 || clickMultiplier > 1;
+        superTiklamaButonu.disabled = tiklamaSayisi < 5000 || additiveClickValue > 0;
+        autoclickerHizlandirmaButonu.disabled = tiklamaSayisi < 20000 || autoclickerMultiplier > 1;
+    }
+
+    function otomatikTiklamayiBaslat() {
+        if (otomatikTiklayiciInterval) { clearInterval(otomatikTiklayiciInterval); }
+        otomatikTiklayiciInterval = setInterval(() => {
+            tiklamaSayisi += toplamTiklamaHizi * autoclickerMultiplier;
+            sayacGuncelle();
+        }, 1000);
+    }
+
+    function resetGame() {
+        tiklamaSayisi = 0;
+        toplamTiklamaHizi = 0;
+        clickMultiplier = 1;
+        additiveClickValue = 0;
+        autoclickerMultiplier = 1;
+        acikKostumler = {
+            zombi: false, valorant: false, arap: false, pepsi: false, minecraft: false, kratos: false, spiderman: false, sushi: false, darthVader: false, padisah: false, elPrimo: false, shrek: false
+        };
+
+        otomatikTiklayici1Butonu.disabled = false;
+        otomatikTiklayici1Butonu.textContent = "Çırak Tıklayıcı (50 Tıklama, +2/s)";
+        otomatikTiklayici2Butonu.disabled = true;
+        otomatikTiklayici2Butonu.textContent = "Usta Tıklayıcı (250 Tıklama, +10/s)";
+        otomatikTiklayici3Butonu.disabled = true;
+        otomatikTiklayici3Butonu.textContent = "Çiftçi Tıklayıcı (500 Tıklama, +25/s)";
+        otomatikTiklayici4Butonu.disabled = true;
+        otomatikTiklayici4Butonu.textContent = "İşçi Patates (1500 Tıklama, +100/s)";
+        otomatikTiklayici5Butonu.disabled = true;
+        otomatikTiklayici5Butonu.textContent = "Fabrika (5000 Tıklama, +500/s)";
+        otomatikTiklayici6Butonu.disabled = true;
+        otomatikTiklayici6Butonu.textContent = "İmparatorluk (25000 Tıklama, +1000/s)";
+
+        ciftTiklamaButonu.disabled = true;
+        ciftTiklamaButonu.textContent = "Çift Tıklama (10000 Tıklama)";
+        superTiklamaButonu.disabled = true;
+        superTiklamaButonu.textContent = "Süper Tıklama (5000 Tıklama)";
+        autoclickerHizlandirmaButonu.disabled = true;
+        autoclickerHizlandirmaButonu.textContent = "Otomatik Tıklama Hızlandırma (20000 Tıklama)";
+
+        const seciliKostum = document.querySelector('.kostum-resmi.secili');
+        if (seciliKostum) {
+            seciliKostum.classList.remove('secili');
+        }
+        kostumResimleri.normal.classList.add('secili');
+        patatesImg.src = 'patatesler/normal_patates.png';
+        for (const kostum in kostumResimleri) {
+            if (kostum !== 'normal') {
+                kostumResimleri[kostum].style.opacity = 0.5;
+                kostumResimleri[kostum].style.cursor = 'not-allowed';
+            } else {
+                kostumResimleri.normal.style.opacity = 1;
+                kostumResimleri.normal.style.cursor = 'pointer';
+            }
+        }
+
+        sayacGuncelle();
+        clearInterval(otomatikTiklayiciInterval);
+        arkaPlanMuziki.pause();
+        arkaPlanMuziki.currentTime = 0;
+    }
+
+    // Olay dinleyicileri
+    document.getElementById('oyna-butonu').addEventListener('click', () => {
+        resetGame();
+        ekraniGoster(oyunEkrani);
+        if(muzikAcik) {
+            arkaPlanMuziki.play();
+        }
+    });
+
+    document.getElementById('ayarlar-butonu').addEventListener('click', () => {
+        ekraniGoster(ayarlarEkrani);
+        sesAcKapaButonu.textContent = muzikAcik ? 'Müziği Kapat' : 'Müziği Aç';
+    });
+
+    document.getElementById('hakkinda-butonu').addEventListener('click', () => ekraniGoster(hakkindaEkrani));
+    // DÜZELTME: "ana-menu-ekrani" yerine "anaMenuEkrani" kullanıldı
+    document.getElementById('geri-don-butonu').addEventListener('click', () => {
+        ekraniGoster(anaMenuEkrani);
+        resetGame();
+    });
+
+    // DÜZELTME: "ana-menu-ekrani" yerine "anaMenuEkrani" kullanıldı
+    document.getElementById('ayarlardan-geri-don').addEventListener('click', () => ekraniGoster(anaMenuEkrani));
+    // DÜZELTME: "ana-menu-ekrani" yerine "anaMenuEkrani" kullanıldı
+    document.getElementById('hakkindadan-geri-don').addEventListener('click', () => ekraniGoster(anaMenuEkrani));
+
+    // Yeni kostüm menüsü açma/kapama işlevi
+    kostumMenusuBaslik.addEventListener('click', () => {
+        if (kostumlerIcerik.style.display === 'none') {
+            kostumlerIcerik.style.display = 'flex';
+            kostumMenusuBaslik.textContent = 'Kostümler ▲';
+        } else {
+            kostumlerIcerik.style.display = 'none';
+            kostumMenusuBaslik.textContent = 'Kostümler ▼';
+        }
+    });
+
+    // Ayarlar ekranındaki ses butonu
+    sesAcKapaButonu.addEventListener('click', () => {
+        muzikAcik = !muzikAcik;
+        if (muzikAcik) {
+            arkaPlanMuziki.play();
+            muzikKontrolButonu.src = "patatesler/muzik_kapatma.png";
+            sesAcKapaButonu.textContent = 'Müziği Kapat';
+        } else {
+            arkaPlanMuziki.pause();
+            muzikKontrolButonu.src = "patatesler/muzik_acma.png";
+            sesAcKapaButonu.textContent = 'Müziği Aç';
+        }
+    });
+
+    // Oyun içindeki müzik butonu
+    muzikKontrolButonu.addEventListener('click', () => {
+        muzikAcik = !muzikAcik;
+        if (muzikAcik) {
+            arkaPlanMuziki.play();
+            muzikKontrolButonu.src = "patatesler/muzik_kapatma.png";
+        } else {
+            arkaPlanMuziki.pause();
+            muzikKontrolButonu.src = "patatesler/muzik_acma.png";
+        }
+    });
+
+    // Patatese tıklandığında
+    patatesImg.addEventListener('click', () => {
+        tiklamaSayisi += (1 * clickMultiplier) + additiveClickValue;
+        sayacGuncelle();
+    });
+
+    // Yükseltmelerin işlevleri
+    ciftTiklamaButonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= 10000) {
+            tiklamaSayisi -= 10000;
+            clickMultiplier = 2;
+            sayacGuncelle();
+            ciftTiklamaButonu.disabled = true;
+            ciftTiklamaButonu.textContent = "Alındı! (x2)";
+            alert("Tebrikler, artık her tıklamanız 2 kat sayılıyor!");
+        } else {
+            alert("Yeterli tıklamanız yok! (Maliyet: 10000)");
+        }
+    });
+
+    superTiklamaButonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= 5000) {
+            tiklamaSayisi -= 5000;
+            additiveClickValue += 1;
+            sayacGuncelle();
+            superTiklamaButonu.disabled = true;
+            superTiklamaButonu.textContent = "Alındı! (+1)";
+            alert("Tebrikler, artık her tıklamanız +1 ekstra tıklama kazandırıyor!");
+        } else {
+            alert("Yeterli tıklamanız yok! (Maliyet: 5000)");
+        }
+    });
+
+    autoclickerHizlandirmaButonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= 20000) {
+            tiklamaSayisi -= 20000;
+            autoclickerMultiplier = 2;
+            sayacGuncelle();
+            autoclickerHizlandirmaButonu.disabled = true;
+            autoclickerHizlandirmaButonu.textContent = "Alındı! (x2)";
+            otomatikTiklamayiBaslat();
+            alert("Tebrikler, tüm otomatik tıklayıcıların hızı 2 katına çıktı!");
+        } else {
+            alert("Yeterli tıklamanız yok! (Maliyet: 20000)");
+        }
+    });
+
+    // Otomatik tıklayıcı butonları
+    otomatikTiklayici1Butonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= otomatikTiklayiciMaliyetleri[1]) {
+            tiklamaSayisi -= otomatikTiklayiciMaliyetleri[1];
+            toplamTiklamaHizi += 2;
+            sayacGuncelle();
+            otomatikTiklayici1Butonu.disabled = true;
+            otomatikTiklayici1Butonu.textContent = "Alındı! (+2/s)";
+            otomatikTiklamayiBaslat();
+        } else { alert(`Yeterli tıklamanız yok! (Maliyet: ${otomatikTiklayiciMaliyetleri[1]})`); }
+    });
+
+    otomatikTiklayici2Butonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= otomatikTiklayiciMaliyetleri[2]) {
+            tiklamaSayisi -= otomatikTiklayiciMaliyetleri[2];
+            toplamTiklamaHizi += 10;
+            sayacGuncelle();
+            otomatikTiklayici2Butonu.disabled = true;
+            otomatikTiklayici2Butonu.textContent = "Alındı! (+10/s)";
+            otomatikTiklamayiBaslat();
+        } else { alert(`Yeterli tıklamanız yok! (Maliyet: ${otomatikTiklayiciMaliyetleri[2]})`); }
+    });
+
+    otomatikTiklayici3Butonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= otomatikTiklayiciMaliyetleri[3]) {
+            tiklamaSayisi -= otomatikTiklayiciMaliyetleri[3];
+            toplamTiklamaHizi += 25;
+            sayacGuncelle();
+            otomatikTiklayici3Butonu.disabled = true;
+            otomatikTiklayici3Butonu.textContent = "Alındı! (+25/s)";
+            otomatikTiklamayiBaslat();
+        } else { alert(`Yeterli tıklamanız yok! (Maliyet: ${otomatikTiklayiciMaliyetleri[3]})`); }
+    });
+
+    otomatikTiklayici4Butonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= otomatikTiklayiciMaliyetleri[4]) {
+            tiklamaSayisi -= otomatikTiklayiciMaliyetleri[4];
+            toplamTiklamaHizi += 100;
+            sayacGuncelle();
+            otomatikTiklayici4Butonu.disabled = true;
+            otomatikTiklayici4Butonu.textContent = "Alındı! (+100/s)";
+            otomatikTiklamayiBaslat();
+        } else { alert(`Yeterli tıklamanız yok! (Maliyet: ${otomatikTiklayiciMaliyetleri[4]})`); }
+    });
+
+    otomatikTiklayici5Butonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= otomatikTiklayiciMaliyetleri[5]) {
+            tiklamaSayisi -= otomatikTiklayiciMaliyetleri[5];
+            toplamTiklamaHizi += 500;
+            sayacGuncelle();
+            otomatikTiklayici5Butonu.disabled = true;
+            otomatikTiklayici5Butonu.textContent = "Alındı! (+500/s)";
+            otomatikTiklamayiBaslat();
+        } else { alert(`Yeterli tıklamanız yok! (Maliyet: ${otomatikTiklayiciMaliyetleri[5]})`); }
+    });
+
+    otomatikTiklayici6Butonu.addEventListener('click', () => {
+        if (tiklamaSayisi >= otomatikTiklayiciMaliyetleri[6]) {
+            tiklamaSayisi -= otomatikTiklayiciMaliyetleri[6];
+            toplamTiklamaHizi += 1000;
+            sayacGuncelle();
+            otomatikTiklayici6Butonu.disabled = true;
+            otomatikTiklayici6Butonu.textContent = "Alındı! (+1000/s)";
+            otomatikTiklamayiBaslat();
+        } else { alert(`Yeterli tıklamanız yok! (Maliyet: ${otomatikTiklayiciMaliyetleri[6]})`); }
+    });
+
+    // Kostüm seçme işlevleri
+    for (const kostum in kostumResimleri) {
+        kostumResimleri[kostum].addEventListener('click', () => {
+            if (kostum === 'normal' || acikKostumler[kostum]) {
+                patatesImg.src = kostumResimleri[kostum].src;
+                const currentSecili = document.querySelector('.kostum-resmi.secili');
+                if (currentSecili) {
+                    currentSecili.classList.remove('secili');
+                }
+                kostumResimleri[kostum].classList.add('secili');
+            } else {
+                alert(`Bu kostümü kullanmak için ${kostumEskikleri[kostum]} tıklamaya ulaşmanız gerekiyor.`);
+            }
+        });
+    }
+</script>
+</body>
+</html>
